@@ -128,6 +128,7 @@ async function createWebhook(
   const secret = crypto.randomBytes(32).toString("hex");
 
   const payload = await client.createWebhook({
+    label: "Flows",
     url: webhookUrl,
     ...(teamId ? { teamId } : { allPublicTeams: true }),
     resourceTypes: [...RESOURCE_TYPES],
