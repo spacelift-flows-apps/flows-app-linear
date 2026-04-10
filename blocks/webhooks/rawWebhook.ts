@@ -9,8 +9,7 @@ export const rawWebhook = {
   config: {
     resourceType: {
       name: "Resource Type",
-      description:
-        "Filter by resource type. Leave empty to receive all types.",
+      description: "Filter by resource type. Leave empty to receive all types.",
       type: "string" as const,
       required: false,
       suggestValues: async (input: { searchPhrase?: string }) => {
@@ -40,8 +39,7 @@ export const rawWebhook = {
     },
     action: {
       name: "Action",
-      description:
-        "Filter by action. Leave empty to receive all actions.",
+      description: "Filter by action. Leave empty to receive all actions.",
       type: "string" as const,
       required: false,
       suggestValues: async (input: { searchPhrase?: string }) => {

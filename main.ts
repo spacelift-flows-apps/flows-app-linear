@@ -1,13 +1,32 @@
-import crypto from "crypto";
 import { defineApp } from "@slflows/sdk/v1";
-import { blocks as blocksDef, http, kv, messaging } from "@slflows/sdk/v1";
+import { blocks as blocksDef, http, messaging } from "@slflows/sdk/v1";
 import { blocks } from "./blocks/index";
 import { createLinearClient } from "./utils/linearClient";
+import {
+  ensureWebhook,
+  deleteWebhook,
+  getStoredWebhook,
+  verifySignature,
+} from "./utils/webhook";
 
 export const app = defineApp({
   name: "Linear",
-  installationInstructions:
-    "Linear app for Flows focused on issue management.\n\nTo install:\n1. Go to Linear Settings > Account > API > Personal API keys\n2. Create a new API key\n3. Paste the key in the API Key field below\n4. Start using the blocks in your flows",
+  installationInstructions: `Linear app for Flows focused on issue management.
+
+## Setup
+1. Go to **Linear Settings > Account > API > Personal API keys**
+2. Create a new API key
+3. Paste the key in the API Key field below
+4. Optionally set a Team Key to scope webhooks to a specific team
+
+## Webhook Management
+Webhooks are managed automatically — no manual setup needed.
+- The app registers a webhook in Linear on install and cleans it up on uninstall.
+- If webhook events stop arriving, trigger a **re-sync** from the Flows UI. The app will detect and fix the issue (re-create if deleted, re-enable if disabled, update URL if changed).
+- The webhook URL and status are visible as app signals in the flow editor.
+
+## Supported Webhook Resource Types
+Issue, Comment, Project, Cycle, IssueLabel, Reaction, ProjectUpdate.`,
 
   blocks,
 
@@ -28,91 +47,43 @@ export const app = defineApp({
     },
   },
 
-  onSync: async (input) => {
-    const apiKey = input.app.config.apiKey as string;
-    const client = createLinearClient(apiKey);
+  signals: {
+    webhookUrl: {
+      name: "Webhook URL",
+      description: "The URL Linear sends webhook events to",
+    },
+    webhookEnabled: {
+      name: "Webhook Enabled",
+      description: "Whether the webhook is currently active in Linear",
+    },
+  },
 
-    // Validate credentials.
+  onSync: async (input) => {
+    const client = createLinearClient(input.app.config.apiKey as string);
+
     await client.viewer;
 
-    const existingWebhookId = await kv.app.get("linear_webhook_id");
-    if (existingWebhookId.value) {
-      return { newStatus: "ready" };
-    }
-
-    // Create a new webhook.
-    const webhookUrl = input.app.http.url + "/webhook";
-    const secret = crypto.randomBytes(32).toString("hex");
-
-    const teamKey = input.app.config.teamKey as string | undefined;
-
-    let teamId: string | undefined;
-    if (teamKey) {
-      const teams = await client.teams({
-        filter: { key: { eq: teamKey } },
-      });
-      const team = teams.nodes[0];
-      if (!team) {
-        throw new Error(`Team with key "${teamKey}" not found`);
-      }
-      teamId = team.id;
-    }
-
-    const payload = await client.createWebhook({
-      url: webhookUrl,
-      ...(teamId ? { teamId } : { allPublicTeams: true }),
-      // All resource types supported by Linear webhooks:
-      // https://developers.linear.app/docs/graphql/webhooks
-      resourceTypes: [
-        "Issue",
-        "Comment",
-        "Project",
-        "Cycle",
-        "IssueLabel",
-        "Reaction",
-        "ProjectUpdate",
-      ],
-      secret,
+    const webhookUrl = await ensureWebhook({
+      client,
+      webhookUrl: input.app.http.url + "/webhook",
+      teamKey: input.app.config.teamKey as string | undefined,
     });
 
-    const webhook = await payload.webhook;
-    if (!webhook) {
-      throw new Error("creating webhook: no webhook returned");
-    }
-
-    await kv.app.set({ key: "linear_webhook_id", value: webhook.id });
-    await kv.app.set({ key: "linear_webhook_secret", value: secret });
-
-    return { newStatus: "ready" };
+    return {
+      newStatus: "ready",
+      signalUpdates: { webhookUrl, webhookEnabled: true },
+    };
   },
 
   onDrain: async (input) => {
-    const apiKey = input.app.config.apiKey as string;
-    const client = createLinearClient(apiKey);
+    const client = createLinearClient(input.app.config.apiKey as string);
 
-    const existingWebhookId = await kv.app.get("linear_webhook_id");
-    if (existingWebhookId.value) {
-      try {
-        await client.deleteWebhook(existingWebhookId.value as string);
-      } catch (err) {
-        // Re-throw systemic errors (auth, network, rate limit).
-        // Ignore others — webhook may have been deleted externally.
-        const errType = (err as { type?: string }).type;
-        const systemicErrors = [
-          "AuthenticationError",
-          "Forbidden",
-          "Ratelimited",
-          "NetworkError",
-        ];
-        if (errType && systemicErrors.includes(errType)) {
-          throw err;
-        }
-      }
-    }
+    await deleteWebhook(client);
 
-    await kv.app.delete(["linear_webhook_id", "linear_webhook_secret"]);
-
-    return { newStatus: "drained" };
+    return {
+      newStatus: "drained",
+      signalUpdates: { webhookUrl: null, webhookEnabled: false },
+    };
   },
 
   http: {
@@ -125,35 +96,23 @@ export const app = defineApp({
         return;
       }
 
-      const secretKv = await kv.app.get("linear_webhook_secret");
-      if (!secretKv.value) {
+      const stored = await getStoredWebhook();
+      if (!stored) {
         await http.respond(input.request.requestId, { statusCode: 500 });
         return;
       }
 
-      // Verify Linear-Signature header (case-insensitive lookup).
+      // Case-insensitive header lookup.
       const signatureHeader = Object.keys(input.request.headers).find(
         (h) => h.toLowerCase() === "linear-signature",
       );
       const signature = signatureHeader
         ? input.request.headers[signatureHeader]
         : undefined;
-      if (!signature) {
-        await http.respond(input.request.requestId, { statusCode: 401 });
-        return;
-      }
-
-      const expectedSignature = crypto
-        .createHmac("sha256", secretKv.value as string)
-        .update(input.request.rawBody)
-        .digest("hex");
-
-      const sigBuffer = Buffer.from(signature);
-      const expectedBuffer = Buffer.from(expectedSignature);
 
       if (
-        sigBuffer.length !== expectedBuffer.length ||
-        !crypto.timingSafeEqual(sigBuffer, expectedBuffer)
+        !signature ||
+        !verifySignature(input.request.rawBody, signature, stored.secret)
       ) {
         await http.respond(input.request.requestId, { statusCode: 401 });
         return;
@@ -161,7 +120,6 @@ export const app = defineApp({
 
       const payload = JSON.parse(input.request.rawBody);
 
-      // Route to all rawWebhook blocks.
       const rawWebhookBlocks = await blocksDef.list({
         typeIds: ["rawWebhook"],
       });
