@@ -12,6 +12,12 @@ A Linear personal API key is required.
 2. Create a new API key
 3. Paste the key when installing the app in Flows
 
+## Blocks
+
+### Run GraphQL Query
+
+Execute any GraphQL query or mutation against the Linear API. This is an escape-hatch block for operations not covered by specific blocks.
+
 ## Development
 
 ### Prerequisites
