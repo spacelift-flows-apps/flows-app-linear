@@ -1,4 +1,5 @@
 import { EntityOnInternalMessageInput, events } from "@slflows/sdk/v1";
+import { RESOURCE_TYPES } from "../../utils/constants";
 
 export const rawWebhook = {
   name: "Linear Webhook Event",
@@ -13,23 +14,13 @@ export const rawWebhook = {
       type: "string" as const,
       required: false,
       suggestValues: async (input: { searchPhrase?: string }) => {
-        const values = [
-          { value: "Issue", label: "Issue" },
-          { value: "Comment", label: "Comment" },
-          { value: "Project", label: "Project" },
-          { value: "Cycle", label: "Cycle" },
-          { value: "IssueLabel", label: "Issue Label" },
-          { value: "Reaction", label: "Reaction" },
-          { value: "ProjectUpdate", label: "Project Update" },
-        ];
+        const values = RESOURCE_TYPES.map((t) => ({ value: t, label: t }));
 
         if (input.searchPhrase) {
           const search = input.searchPhrase.toLowerCase();
           return {
-            suggestedValues: values.filter(
-              (v) =>
-                v.value.toLowerCase().includes(search) ||
-                v.label.toLowerCase().includes(search),
+            suggestedValues: values.filter((v) =>
+              v.label.toLowerCase().includes(search),
             ),
           };
         }

@@ -1,19 +1,10 @@
 import crypto from "crypto";
 import { LinearClient } from "@linear/sdk";
 import { kv } from "@slflows/sdk/v1";
+import { RESOURCE_TYPES } from "./constants";
 
 const KV_WEBHOOK_ID = "linear_webhook_id";
 const KV_WEBHOOK_SECRET = "linear_webhook_secret";
-
-const RESOURCE_TYPES = [
-  "Issue",
-  "Comment",
-  "Project",
-  "Cycle",
-  "IssueLabel",
-  "Reaction",
-  "ProjectUpdate",
-];
 
 const SYSTEMIC_ERROR_TYPES = [
   "AuthenticationError",
@@ -139,7 +130,7 @@ async function createWebhook(
   const payload = await client.createWebhook({
     url: webhookUrl,
     ...(teamId ? { teamId } : { allPublicTeams: true }),
-    resourceTypes: RESOURCE_TYPES,
+    resourceTypes: [...RESOURCE_TYPES],
     secret,
   });
 
