@@ -2,26 +2,19 @@ import { defineApp } from "@slflows/sdk/v1";
 import { blocks } from "./blocks/index";
 
 export const app = defineApp({
-  name: "{{APP_NAME}}",
+  name: "Linear",
   installationInstructions:
-    "{{APP_DESCRIPTION}}\n\nTo install:\n1. Add your API key\n2. Configure the base URL if needed\n3. Start using the blocks in your flows",
+    "Linear app for Flows focused on issue management.\n\nTo install:\n1. Go to Linear Settings > Account > API > Personal API keys\n2. Create a new API key\n3. Paste the key in the API Key field below\n4. Start using the blocks in your flows",
 
   blocks,
 
   config: {
     apiKey: {
       name: "API Key",
-      description: "Your service API key",
+      description: "Linear personal API key (Settings > Account > API)",
       type: "string",
       required: true,
       sensitive: true,
-    },
-    baseUrl: {
-      name: "Base URL",
-      description: "API base URL",
-      type: "string",
-      required: false,
-      default: "https://api.example.com",
     },
   },
 });
