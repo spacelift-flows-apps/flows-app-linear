@@ -12,8 +12,10 @@ async function fetchTeams(apiKey: string) {
 async function fetchWorkflowStates(apiKey: string, teamId: string) {
   const client = createLinearClient(apiKey);
   const team = await client.team(teamId);
-  const result = await team.states({ filter: { archivedAt: { null: true } } });
-  return result.nodes.map((s) => ({ id: s.id, name: s.name, type: s.type }));
+  const result = await team.states();
+  return result.nodes
+    .filter((s) => !s.archivedAt)
+    .map((s) => ({ id: s.id, name: s.name, type: s.type }));
 }
 
 async function fetchProjects(apiKey: string) {
