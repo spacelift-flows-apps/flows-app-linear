@@ -2,9 +2,9 @@ import { EntityOnInternalMessageInput, events } from "@slflows/sdk/v1";
 import { RESOURCE_TYPES } from "../../utils/constants";
 
 export const rawWebhook = {
-  name: "Linear Webhook Event",
-  description: "Receives any webhook event from Linear (escape hatch)",
-  category: "Webhooks",
+  name: "Any Event",
+  description: "Receives any event from Linear (escape hatch)",
+  category: "Events",
   entrypoint: true,
 
   config: {
@@ -71,8 +71,8 @@ export const rawWebhook = {
 
   outputs: {
     default: {
-      name: "Webhook Event",
-      description: "The raw Linear webhook event payload",
+      name: "Event",
+      description: "The raw Linear event payload",
       default: true,
       type: {
         type: "object",
