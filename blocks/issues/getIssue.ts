@@ -1,5 +1,6 @@
 import { AppBlock, events } from "@slflows/sdk/v1";
 import { createLinearClient } from "../../utils/linearClient";
+import { issueDetailSchema } from "./schemas";
 
 export const getIssue: AppBlock = {
   name: "Get Issue",
@@ -52,46 +53,7 @@ export const getIssue: AppBlock = {
       name: "Issue",
       description: "The retrieved issue",
       default: true,
-      type: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          identifier: { type: "string" },
-          title: { type: "string" },
-          description: { type: "string" },
-          url: { type: "string" },
-          priority: { type: "number" },
-          estimate: { type: "number" },
-          dueDate: { type: "string" },
-          state: {
-            type: "object",
-            properties: {
-              id: { type: "string" },
-              name: { type: "string" },
-            },
-            required: ["id", "name"],
-          },
-          team: {
-            type: "object",
-            properties: {
-              id: { type: "string" },
-              name: { type: "string" },
-              key: { type: "string" },
-            },
-            required: ["id", "name", "key"],
-          },
-          assignee: {
-            type: "object",
-            properties: {
-              id: { type: "string" },
-              name: { type: "string" },
-              email: { type: "string" },
-            },
-            required: ["id", "name", "email"],
-          },
-        },
-        required: ["id", "identifier", "title", "url", "priority"],
-      },
+      type: issueDetailSchema,
     },
   },
 };

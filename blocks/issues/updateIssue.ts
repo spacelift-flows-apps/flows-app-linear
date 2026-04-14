@@ -10,7 +10,7 @@ import {
   priorityConfig,
   projectIdConfig,
 } from "../../utils/suggestValues";
-import { issueMutationResultSchema } from "./schemas";
+import { issueDetailSchema } from "./schemas";
 
 export const updateIssue: AppBlock = {
   name: "Update Issue",
@@ -132,16 +132,26 @@ export const updateIssue: AppBlock = {
         const issue = await result.issue;
         if (!issue) throw new Error("updating issue: no issue returned");
 
-        const state = await issue.state;
-        const team = await issue.team;
+        const [state, team, assignee] = await Promise.all([
+          issue.state,
+          issue.team,
+          issue.assignee,
+        ]);
 
         await events.emit({
           id: issue.id,
           identifier: issue.identifier,
           title: issue.title,
+          description: issue.description ?? null,
           url: issue.url,
+          priority: issue.priority,
+          estimate: issue.estimate ?? null,
+          dueDate: issue.dueDate ?? null,
           state: state ? { id: state.id, name: state.name } : null,
           team: team ? { id: team.id, name: team.name, key: team.key } : null,
+          assignee: assignee
+            ? { id: assignee.id, name: assignee.name, email: assignee.email }
+            : null,
         });
       },
     },
@@ -152,7 +162,7 @@ export const updateIssue: AppBlock = {
       name: "Updated Issue",
       description: "The updated issue",
       default: true,
-      type: issueMutationResultSchema,
+      type: issueDetailSchema,
     },
   },
 };

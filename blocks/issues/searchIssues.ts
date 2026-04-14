@@ -1,5 +1,6 @@
 import { AppBlock, events } from "@slflows/sdk/v1";
 import { createLinearClient } from "../../utils/linearClient";
+import { issueSummarySchema } from "./schemas";
 import {
   teamIdConfig,
   stateIdConfig,
@@ -96,8 +97,11 @@ export const searchIssues: AppBlock = {
           id: issue.id,
           identifier: issue.identifier,
           title: issue.title,
+          description: issue.description ?? null,
           url: issue.url,
           priority: issue.priority,
+          estimate: issue.estimate ?? null,
+          dueDate: issue.dueDate ?? null,
         }));
 
         await events.emit({ results });
@@ -115,17 +119,7 @@ export const searchIssues: AppBlock = {
         properties: {
           results: {
             type: "array",
-            items: {
-              type: "object",
-              properties: {
-                id: { type: "string" },
-                identifier: { type: "string" },
-                title: { type: "string" },
-                url: { type: "string" },
-                priority: { type: "number" },
-              },
-              required: ["id", "identifier", "title", "url", "priority"],
-            },
+            items: issueSummarySchema,
           },
         },
         required: ["results"],
