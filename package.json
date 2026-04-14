@@ -1,6 +1,8 @@
 {
+  "name": "flows-app-linear",
   "type": "module",
   "dependencies": {
+    "@linear/sdk": "^37.0.0",
     "@slflows/sdk": "^0.0.8",
     "typescript": "^5.8.3"
   },
@@ -11,7 +13,6 @@
     "ts-node": "^10.9.2"
   },
   "scripts": {
-    "setup": "./setup.sh",
     "bundle": "npx flowctl version bundle -e main.ts",
     "format": "npx prettier --write .",
     "typecheck": "npx tsc --noEmit"
