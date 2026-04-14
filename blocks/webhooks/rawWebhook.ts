@@ -79,7 +79,7 @@ export const rawWebhook = {
         properties: {
           action: { type: "string" },
           type: { type: "string" },
-          data: { type: "object" },
+          data: { type: "object", additionalProperties: true },
           createdAt: { type: "string" },
         },
         required: ["action", "type", "data", "createdAt"],

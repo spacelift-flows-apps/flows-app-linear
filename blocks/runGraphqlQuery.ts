@@ -51,11 +51,10 @@ export const runGraphqlQuery: AppBlock = {
       type: {
         type: "object",
         properties: {
-          data: { type: "object" },
+          data: { type: "object", additionalProperties: true },
           status: { type: "number" },
         },
         required: ["data", "status"],
-        additionalProperties: true,
       },
     },
   },
