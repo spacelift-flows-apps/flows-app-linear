@@ -10,6 +10,7 @@ import {
   priorityConfig,
   projectIdConfig,
 } from "../../utils/suggestValues";
+import { issueMutationResultSchema } from "./schemas";
 
 export const createIssue: AppBlock = {
   name: "Create Issue",
@@ -136,33 +137,7 @@ export const createIssue: AppBlock = {
       name: "Created Issue",
       description: "The newly created issue",
       default: true,
-      type: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          identifier: { type: "string" },
-          title: { type: "string" },
-          url: { type: "string" },
-          state: {
-            type: "object",
-            properties: {
-              id: { type: "string" },
-              name: { type: "string" },
-            },
-            required: ["id", "name"],
-          },
-          team: {
-            type: "object",
-            properties: {
-              id: { type: "string" },
-              name: { type: "string" },
-              key: { type: "string" },
-            },
-            required: ["id", "name", "key"],
-          },
-        },
-        required: ["id", "identifier", "title", "url", "state", "team"],
-      },
+      type: issueMutationResultSchema,
     },
   },
 };
