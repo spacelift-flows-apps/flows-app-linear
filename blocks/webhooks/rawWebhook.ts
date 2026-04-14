@@ -1,5 +1,6 @@
 import { EntityOnInternalMessageInput, events } from "@slflows/sdk/v1";
 import { RESOURCE_TYPES } from "../../utils/constants";
+import { webhookEventSchema } from "./schemas";
 
 export const rawWebhook = {
   name: "Any Event",
@@ -74,16 +75,7 @@ export const rawWebhook = {
       name: "Event",
       description: "The raw Linear event payload",
       default: true,
-      type: {
-        type: "object",
-        properties: {
-          action: { type: "string" },
-          type: { type: "string" },
-          data: { type: "object", additionalProperties: true },
-          createdAt: { type: "string" },
-        },
-        required: ["action", "type", "data", "createdAt"],
-      },
+      type: webhookEventSchema,
     },
   },
 };
