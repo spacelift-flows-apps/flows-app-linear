@@ -6,6 +6,9 @@ import { RESOURCE_TYPES } from "./constants";
 const KV_WEBHOOK_ID = "linear_webhook_id";
 const KV_WEBHOOK_SECRET = "linear_webhook_secret";
 
+// Errors that indicate infrastructure/auth problems rather than "resource not found".
+// The Linear SDK doesn't expose a dedicated NotFound error type, so we catch everything
+// and only re-throw these systemic errors — the rest are treated as "webhook gone".
 const SYSTEMIC_ERROR_TYPES = [
   "AuthenticationError",
   "Forbidden",

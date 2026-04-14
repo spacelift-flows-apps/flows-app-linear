@@ -61,6 +61,7 @@ Issue, Comment, Project, Cycle, IssueLabel, Reaction, ProjectUpdate.`,
   onSync: async (input) => {
     const client = createLinearClient(input.app.config.apiKey as string);
 
+    // Validate credentials before proceeding with webhook setup.
     await client.viewer;
 
     const webhookUrl = await ensureWebhook({
