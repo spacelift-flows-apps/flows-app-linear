@@ -55,6 +55,7 @@ export const runGraphqlQuery: AppBlock = {
           status: { type: "number" },
         },
         required: ["data", "status"],
+        additionalProperties: true,
       },
     },
   },
