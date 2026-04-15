@@ -42,9 +42,8 @@ export const createIssue: AppBlock = {
         priority: priorityConfig,
         labelNames: {
           name: "Labels",
-          description:
-            "Comma-separated label names (e.g. Bug, Feature). Case-sensitive.",
-          type: "string",
+          description: "Label names (e.g. Bug, Feature). Case-sensitive.",
+          type: { type: "array", items: { type: "string" } },
           required: false,
         },
         projectId: projectIdConfig,
@@ -83,16 +82,11 @@ export const createIssue: AppBlock = {
 
         const client = createLinearClient(apiKey);
 
-        const labelIds = labelNamesRaw
-          ? await resolveLabelsByName(
-              client,
-              teamId as string,
-              (labelNamesRaw as string)
-                .split(",")
-                .map((s) => s.trim())
-                .filter(Boolean),
-            )
-          : undefined;
+        const labelNames = labelNamesRaw as string[] | undefined;
+        const labelIds =
+          labelNames && labelNames.length > 0
+            ? await resolveLabelsByName(client, teamId as string, labelNames)
+            : undefined;
 
         const assigneeId = assigneeHandle
           ? await resolveUserByHandle(client, assigneeHandle as string)

@@ -47,8 +47,8 @@ export const updateIssue: AppBlock = {
         labelNames: {
           name: "Labels",
           description:
-            "Comma-separated label names (e.g. Bug, Feature). Case-sensitive. Replaces the issue's current labels.",
-          type: "string",
+            "Label names (e.g. Bug, Feature). Case-sensitive. Replaces the issue's current labels.",
+          type: { type: "array", items: { type: "string" } },
           required: false,
         },
         projectId: projectIdConfig,
@@ -83,8 +83,9 @@ export const updateIssue: AppBlock = {
 
         const client = createLinearClient(apiKey);
 
+        const labelNames = labelNamesRaw as string[] | undefined;
         let labelIds: string[] | undefined;
-        if (labelNamesRaw) {
+        if (labelNames && labelNames.length > 0) {
           // Labels are team-scoped, so we need a teamId. Use the explicit
           // teamId from the update (if moving teams), otherwise look up the
           // issue's current team.
@@ -99,14 +100,7 @@ export const updateIssue: AppBlock = {
             }
             labelTeamId = currentTeam.id;
           }
-          labelIds = await resolveLabelsByName(
-            client,
-            labelTeamId,
-            (labelNamesRaw as string)
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean),
-          );
+          labelIds = await resolveLabelsByName(client, labelTeamId, labelNames);
         }
 
         const assigneeId = assigneeHandle
