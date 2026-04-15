@@ -1,5 +1,16 @@
 import { EntityOnInternalMessageInput, events } from "@slflows/sdk/v1";
-import { webhookEventSchema } from "./schemas";
+import { issueWebhookDataSchema, webhookEventBase } from "./schemas";
+
+/** Envelope shape for `Issue` + `create` webhooks. */
+const issueCreatedEventSchema = {
+  ...webhookEventBase,
+  properties: {
+    ...webhookEventBase.properties,
+    data: issueWebhookDataSchema,
+    organizationId: { type: "string" },
+  },
+  required: [...webhookEventBase.required, "data", "organizationId"],
+};
 
 export const issueCreated = {
   name: "Issue Created",
@@ -16,7 +27,7 @@ export const issueCreated = {
       name: "Issue Created Event",
       description: "Linear webhook payload for an Issue create event",
       default: true,
-      type: webhookEventSchema,
+      type: issueCreatedEventSchema,
     },
   },
 };

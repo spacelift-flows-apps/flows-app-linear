@@ -1,6 +1,26 @@
 import { EntityOnInternalMessageInput, events } from "@slflows/sdk/v1";
 import { RESOURCE_TYPES } from "../../utils/constants";
-import { webhookEventSchema } from "./schemas";
+import { webhookEventBase } from "./schemas";
+
+/**
+ * Loose envelope shape for any Linear webhook. Only the universal-base fields
+ * are guaranteed; `data` is declared so users get editor autocomplete on it
+ * but is conditional (data-change events only, not Issue SLA / OAuth revoke).
+ * `organizationId` and `updatedFrom` are not declared here — users who need
+ * them should use a typed block where they're guaranteed.
+ */
+const webhookEventSchema = {
+  ...webhookEventBase,
+  properties: {
+    ...webhookEventBase.properties,
+    data: {
+      type: "object",
+      description:
+        "Entity payload for data-change events. Absent on Issue SLA and OAuth-revoke events.",
+      additionalProperties: true,
+    },
+  },
+};
 
 export const rawWebhook = {
   name: "Any Event",
