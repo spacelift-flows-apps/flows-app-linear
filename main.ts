@@ -121,6 +121,7 @@ Issue, Comment, Project, Cycle, IssueLabel, Reaction, ProjectUpdate.`,
 
       const payload = JSON.parse(input.request.rawBody);
 
+      // Always send to rawWebhook blocks (escape hatch).
       const rawWebhookBlocks = await blocksDef.list({
         typeIds: ["rawWebhook"],
       });
@@ -129,6 +130,23 @@ Issue, Comment, Project, Cycle, IssueLabel, Reaction, ProjectUpdate.`,
           blockIds: rawWebhookBlocks.blocks.map((b) => b.id),
           body: payload,
         });
+      }
+
+      // Dispatch to typed webhook blocks based on type + action.
+      if (payload.type === "Issue") {
+        let typeId: string | undefined;
+        if (payload.action === "create") typeId = "issueCreated";
+        else if (payload.action === "update") typeId = "issueUpdated";
+
+        if (typeId) {
+          const typed = await blocksDef.list({ typeIds: [typeId] });
+          if (typed.blocks.length > 0) {
+            await messaging.sendToBlocks({
+              blockIds: typed.blocks.map((b) => b.id),
+              body: payload,
+            });
+          }
+        }
       }
 
       await http.respond(input.request.requestId, { statusCode: 200 });
