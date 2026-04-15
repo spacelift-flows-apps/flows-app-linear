@@ -29,6 +29,25 @@ export const assigneeSchema = {
   required: ["id", "name", "email"],
 };
 
+export const labelSchema = {
+  type: "object" as const,
+  properties: {
+    id: { type: "string" },
+    name: { type: "string" },
+  },
+  required: ["id", "name"],
+};
+
+export const projectSchema = {
+  type: "object" as const,
+  properties: {
+    id: { type: "string" },
+    name: { type: "string" },
+    url: { type: "string" },
+  },
+  required: ["id", "name", "url"],
+};
+
 /** Issue fields without relation lookups — used for list/search results. */
 export const issueSummarySchema = {
   type: "object" as const,
@@ -60,6 +79,8 @@ export const issueDetailSchema = {
     state: stateSchema,
     team: teamSchema,
     assignee: assigneeSchema,
+    project: projectSchema,
+    labels: { type: "array" as const, items: labelSchema },
   },
   required: ["id", "identifier", "title", "url", "priority"],
 };

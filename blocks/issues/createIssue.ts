@@ -111,10 +111,12 @@ export const createIssue: AppBlock = {
         const issue = await result.issue;
         if (!issue) throw new Error("creating issue: no issue returned");
 
-        const [state, team, assignee] = await Promise.all([
+        const [state, team, assignee, project, labels] = await Promise.all([
           issue.state,
           issue.team,
           issue.assignee,
+          issue.project,
+          issue.labels(),
         ]);
 
         await events.emit({
@@ -131,6 +133,10 @@ export const createIssue: AppBlock = {
           assignee: assignee
             ? { id: assignee.id, name: assignee.name, email: assignee.email }
             : null,
+          project: project
+            ? { id: project.id, name: project.name, url: project.url }
+            : null,
+          labels: labels.nodes.map((l) => ({ id: l.id, name: l.name })),
         });
       },
     },
